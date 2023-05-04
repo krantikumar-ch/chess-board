@@ -3,6 +3,7 @@ import BlackKnight from "./../assets/black knight.svg";
 import Piece from "./Piece";
 import Square from "./Square";
 import ChessPieces from "../helpers/ChessPieceNames";
+import isKnightKingPossibleMove from "../helpers/CommonUtilsHelper";
 
 export default class Knight extends Piece {
   possibleMoves = [
@@ -25,17 +26,6 @@ export default class Knight extends Piece {
     destSquare: Square,
     squares: Square[][]
   ): boolean {
-    const { srcRow, srcCol, destRow, destCol } = this.extractRows(
-      srcSquare,
-      destSquare
-    );
-
-    for (let i = 0; i < this.possibleMoves.length; i++) {
-      const [row, col] = this.possibleMoves[i];
-      if (srcRow + row === destRow && srcCol + col === destCol) {
-        return true;
-      }
-    }
-    return false;
+    return isKnightKingPossibleMove(srcSquare, destSquare, this.possibleMoves);
   }
 }

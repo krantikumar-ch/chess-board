@@ -1,4 +1,5 @@
 import ChessPieces from "../helpers/ChessPieceNames";
+import { checkRookBishopPath, extractRows } from "../helpers/CommonUtilsHelper";
 import BlackRook from "./../assets/black rook.svg";
 import WhiteRook from "./../assets/white rook.svg";
 import Piece from "./Piece";
@@ -14,7 +15,7 @@ export default class Rook extends Piece {
     destSquare: Square,
     squares: Square[][]
   ): boolean {
-    const pieceDimensions = this.extractRows(srcSquare, destSquare);
+    const pieceDimensions = extractRows(srcSquare, destSquare);
     return (
       this.validMovePosition(pieceDimensions) &&
       this.checkPieceExists(pieceDimensions, squares)
@@ -31,22 +32,13 @@ export default class Rook extends Piece {
 
   private checkPieceExists(pieceDimensions: any, squares: Square[][]): boolean {
     const { srcRow, srcCol, destRow, destCol } = pieceDimensions;
-    const [rowIncrement, colIncrement] = this.getIncrements(
+    const increments = this.getIncrements(
       srcRow,
       srcCol,
       destRow,
       destCol
     );
-    let row = srcRow + rowIncrement;
-    let col = srcCol + colIncrement;
-    while (!(row === destRow && col === destCol)) {
-      if (squares[row][col].piece.player != -1) {
-        return false;
-      }
-      row = row + rowIncrement;
-      col = col + colIncrement;
-    }
-    return true;
+   return checkRookBishopPath(pieceDimensions, squares, increments);
   }
 
   private getIncrements(

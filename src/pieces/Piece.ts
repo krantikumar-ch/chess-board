@@ -31,14 +31,6 @@ export default abstract class Piece {
     );
   }
 
-  protected extractRows(srcSquare: Square, destSquare: Square): any {
-    const srcRow = srcSquare.rowIdx;
-    const srcCol = srcSquare.colIdx;
-    const destRow = destSquare.rowIdx;
-    const destCol = destSquare.colIdx;
-    return { srcRow, srcCol, destRow, destCol };
-  }
-
   private isSamePlayerAtEnd(destSquare: Square): boolean {
     return destSquare.piece.player === this.player;
   }
