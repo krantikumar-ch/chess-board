@@ -3,6 +3,7 @@ import BlackPawn from "./../assets/black pawn.svg";
 import Piece from "./Piece";
 import ChessPieces from "../helpers/ChessPieceNames";
 import Square from "./Square";
+import { extractRows } from "../helpers/CommonUtilsHelper";
 
 export default class Pawn extends Piece {
   initialRow: number;
@@ -25,7 +26,7 @@ export default class Pawn extends Piece {
     destSquare: Square,
     squares: Square[][]
   ): boolean {
-    const { srcRow, srcCol, destRow, destCol } = this.extractRows(
+    const { srcRow, srcCol, destRow, destCol } = extractRows(
       srcSquare,
       destSquare
     );
