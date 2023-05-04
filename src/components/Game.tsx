@@ -42,7 +42,7 @@ const Game = () => {
 
   const handleClick = (selectedSquare: Square) => {
     if (gameOver) return;
-    console.log(selectedSquare, player);
+    // console.log(selectedSquare, player);
     setStatus("");
     if (!validateMove(srcSquare, selectedSquare, player, setStatus)) {
       return;
