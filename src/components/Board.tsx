@@ -1,38 +1,50 @@
 import React from "react";
-import Square from "./Square";
-import Piece from "../pieces/Piece";
+import BoardSquare from "./BoardSquare";
+import Square from "../pieces/Square";
+
 interface Props {
-  pieces: Piece[];
-  onClick: (idx: number) => void;
+  onClick: (squares: Square) => void;
+  size: number;
+  squares: Square[][];
 }
-const Board = ({ pieces, onClick }: Props) => {
+const Board = ({ squares, onClick, size }: Props) => {
   const board = [];
 
-  const isEven = (i: number): boolean => i % 2 == 0;
+  const getSquareShade = (styleName: string): string =>
+    styleName === "dark-square" ? "light-square" : "dark-square";
 
-  const renderSquare = (i: number, squareShade: string) => (
-    <Square
-      key={i}
-      style={pieces[i] ? pieces[i].style : {}}
-      shade={squareShade}
-      onClick={() => onClick(i)}
-    />
-  );
+  const renderSquare = (
+    row: number,
+    col: number,
+    squareShade: string,
+    square: Square
+  ) => {
+    return (
+      <BoardSquare
+        key={row + "" + col}
+        square={square}
+        shade={squareShade}
+        onClick={onClick}
+      />
+    );
+  };
 
-  for (let i = 0; i < 8; i++) {
+  let rowSquareShade = "light-square";
+
+  for (let row = 0; row < size; row++) {
+    let squareShade = rowSquareShade;
     const squareRows = [];
-    for (let j = 0; j < 8; j++) {
-      const squareShade =
-        (isEven(i) && isEven(j)) || (!isEven(i) && !isEven(j))
-          ? "light-square"
-          : "dark-square";
-      squareRows.push(renderSquare(i * 8 + j, squareShade));
+
+    for (let col = 0; col < size; col++) {
+      squareRows.push(renderSquare(row, col, squareShade, squares[row][col]));
+      squareShade = getSquareShade(squareShade);
     }
     board.push(
-      <div className="board-row" key={i}>
+      <div className="board-row" key={row}>
         {squareRows}
       </div>
     );
+    rowSquareShade = getSquareShade(rowSquareShade);
   }
 
   return <div>{board}</div>;

@@ -1,50 +1,63 @@
+import ChessPieces from "../helpers/ChessPieceNames";
 import BlackRook from "./../assets/black rook.svg";
 import WhiteRook from "./../assets/white rook.svg";
 import Piece from "./Piece";
+import Square from "./Square";
 
+export default class Rook extends Piece {
+  constructor(player: number) {
+    super(ChessPieces.ROOK, player, player == 1 ? WhiteRook : BlackRook);
+  }
 
-export default class Rook extends Piece{
+  isMovePossible(
+    srcSquare: Square,
+    destSquare: Square,
+    squares: Square[][]
+  ): boolean {
+    const pieceDimensions = this.extractRows(srcSquare, destSquare);
+    return (
+      this.validMovePosition(pieceDimensions) &&
+      this.checkPieceExists(pieceDimensions, squares)
+    );
+  }
 
-    constructor(player:number){
-        super(player, player == 1 ? WhiteRook : BlackRook);
+  private validMovePosition(pieceDimensions: any): boolean {
+    const { srcRow, srcCol, destRow, destCol } = pieceDimensions;
+    return (
+      (srcRow === destRow && srcCol !== destCol) ||
+      (srcRow !== destRow && srcCol === destCol)
+    );
+  }
+
+  private checkPieceExists(pieceDimensions: any, squares: Square[][]): boolean {
+    const { srcRow, srcCol, destRow, destCol } = pieceDimensions;
+    const [rowIncrement, colIncrement] = this.getIncrements(
+      srcRow,
+      srcCol,
+      destRow,
+      destCol
+    );
+    let row = srcRow + rowIncrement;
+    let col = srcCol + colIncrement;
+    while (!(row === destRow && col === destCol)) {
+      if (squares[row][col].piece.player != -1) {
+        return false;
+      }
+      row = row + rowIncrement;
+      col = col + colIncrement;
     }
+    return true;
+  }
 
-    isMovePossible(src: number, dest: number, isDestEnemyOccupied: boolean): boolean {
-        let mod = src % 8;
-        let diff = 8 - mod;
-        return (Math.abs(src - dest) % 8 === 0 || (dest >= (src - mod) && dest < (src + diff)));
+  private getIncrements(
+    srcRow: number,
+    srcCol: number,
+    destRow: number,
+    destCol: number
+  ): number[] {
+    if (srcRow === destRow) {
+      return [0, srcCol > destCol ? -1 : 1];
     }
-
-    /**
-   * get path between src and dest (src and dest exclusive)
-   * @param  {num} src  
-   * @param  {num} dest 
-   * @return {[array]}      
-   */
-
-    getSrcToDestPath(src: number, dest: number): number[] {
-        let path = [], pathStart, pathEnd, incrementBy;
-        if(src > dest){
-            pathStart = dest;
-            pathEnd = src;
-        }
-        else{
-            pathStart = src;
-            pathEnd = dest;
-        }
-        if(Math.abs(src - dest) % 8 === 0){
-            incrementBy = 8;
-            pathStart += 8;
-        }
-        else{
-            incrementBy = 1;
-            pathStart += 1;
-        }
-
-        for(let i = pathStart; i < pathEnd; i+=incrementBy){
-            path.push(i);
-        }
-        return path;
-    }
-    
+    return [srcRow > destRow ? -1 : 1, 0];
+  }
 }

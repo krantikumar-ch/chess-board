@@ -1,31 +1,41 @@
 import WhiteKing from "./../assets/white king.svg";
 import BlackKing from "./../assets/black king.svg";
 import Piece from "./Piece";
+import ChessPieces from "../helpers/ChessPieceNames";
+import Square from "./Square";
 
-export default class King extends Piece{
-   
-    constructor(player: number){
-        super(player, player == 1 ? WhiteKing : BlackKing);
+export default class King extends Piece {
+  possibleMoves = [
+    [-1, 0],
+    [1, 0],
+    [0, -1],
+    [0, 1],
+    [-1, 1],
+    [-1, -1],
+    [1, -1],
+    [1, 1],
+  ];
+
+  constructor(player: number) {
+    super(ChessPieces.KING, player, player == 1 ? WhiteKing : BlackKing);
+  }
+
+  isMovePossible(
+    srcSquare: Square,
+    destSquare: Square,
+    squares: Square[][]
+  ): boolean {
+    const { srcRow, srcCol, destRow, destCol } = this.extractRows(
+      srcSquare,
+      destSquare
+    );
+
+    for (let i = 0; i < this.possibleMoves.length; i++) {
+      const [row, col] = this.possibleMoves[i];
+      if (srcRow + row === destRow && srcCol + col === destCol) {
+        return true;
+      }
     }
-
-    isMovePossible(src:number, dest:number, isDestEnemyOccupied: boolean):boolean{
-        return (src - 9 === dest || 
-            src - 8 === dest || 
-            src - 7 === dest || 
-            src + 1 === dest || 
-            src + 9 === dest || 
-            src + 8 === dest || 
-            src + 7 === dest || 
-            src - 1 === dest);
-    }
-
-    /**
-   * always returns empty array because of one step
-   * @return {[]}
-   */
-    getSrcToDestPath(src: number, dest: number): number[] {
-        let path: number[] = [];
-        return path;
-    }
-
+    return false;
+  }
 }

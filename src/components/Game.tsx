@@ -1,102 +1,112 @@
 import React, { useState } from "react";
-import initializeChessBoard from "../helpers/ChessBoardHelper";
 import Piece from "../pieces/Piece";
 import Board from "./Board";
-import DefaultPeice from "../pieces/DefaultPiece";
 import FallenSoldiersBlock from "./FallenSoldiersBlock";
+import validateMove from "../helpers/ValidationHelper";
+import initializeChessBoard from "../helpers/ChessBoardHelper";
+import Square from "../pieces/Square";
+import DummyPiece from "../pieces/DummyPiece";
+import ChessPieces from "../helpers/ChessPieceNames";
 
 const Game = () => {
-  const [pieces, setPieces] = useState<Piece[]>(initializeChessBoard(8));
+  const size = 8;
+  const [squares, setSquares] = useState<Square[][]>(
+    initializeChessBoard(size)
+  );
   const [player, setPlayer] = useState(1);
-  const [whiteFallenSoldiers, setWhiteFallenSoldiers] = useState<Piece[]>([]);
-  const [blackFallenSoldiers, setBlackFallenSoldiers] = useState<Piece[]>([]);
-  const [sourceSelection, setSourceSelection] = useState(-1);
+  const [whiteFallenSoldiers, setWhiteFallenSoldiers] = useState<Square[]>([]);
+  const [blackFallenSoldiers, setBlackFallenSoldiers] = useState<Square[]>([]);
   const [status, setStatus] = useState("");
   const [turn, setTurn] = useState("white");
+  const [gameOver, setGameOver] = useState(false);
+  const [srcSquare, setSrcSquare] = useState<Square | null>(null);
 
-  const handleClick = (idx: number) => {
-    console.log("On click ", pieces[idx]);
-    // const tempPieces = pieces.slice();
-    if (sourceSelection === -1) {
-      if (!pieces[idx] || pieces[idx].player !== player) {
-        setStatus(`Wrong selection. Choose player ${player} pieces.`);
-      } else {
-        pieces[idx].style = {
-          ...pieces[idx].style,
-          backgroundColor: "RGB(111,143,114)",
-        };
-        setStatus(`Choose destination for the selected piece`);
-        setSourceSelection(idx);
+  const setFallenSoldiers = (square: Square): boolean => {
+    const { piece } = square;
+    let result = true;
+    if (piece.player !== -1 && piece.player !== player) {
+      if (piece.name === ChessPieces.KING) {
+        setGameOver(true);
+        result = false;
       }
-    } else if (sourceSelection > -1) {
-      pieces[sourceSelection].style = {
-        ...pieces[sourceSelection].style,
-        backgroundColor: "",
-      };
-
-      if (pieces[idx] && pieces[idx].player === player) {
-        setStatus("Wrong selection. Choose valid source and destination again");
-        setSourceSelection(-1);
+      if (piece.player === 1) {
+        whiteFallenSoldiers.push(square);
+        setWhiteFallenSoldiers([...whiteFallenSoldiers]);
       } else {
-        const isDestEnemyOccupied = pieces[idx] ? true : false;
-        const piece = pieces[sourceSelection];
-        const isMovePossible = piece.isMovePossible(
-          sourceSelection,
-          idx,
-          isDestEnemyOccupied
-        );
-        const srcToDestPath = piece.getSrcToDestPath(sourceSelection, idx);
-        const isLegalMove = isMoveLegal(srcToDestPath);
-        if (isMovePossible && isLegalMove) {
-          if (pieces[idx] != null) {
-            if (pieces[idx].player == 1) {
-              whiteFallenSoldiers.push(pieces[idx]);
-            } else if (pieces[idx].player == 2) {
-              blackFallenSoldiers.push(pieces[idx]);
-            }
-          }
-          console.log("whiteFallenSoldiers", whiteFallenSoldiers);
-          console.log("blackFallenSoldiers", blackFallenSoldiers);
-          pieces[idx] = pieces[sourceSelection];
-          pieces[sourceSelection] = new DefaultPeice();
-
-          setStatus("");
-          setSourceSelection(-1);
-          setPieces([...pieces]);
-          setWhiteFallenSoldiers([...whiteFallenSoldiers]);
-          setBlackFallenSoldiers([...blackFallenSoldiers]);
-          setPlayer(player == 1 ? 2 : 1);
-          setTurn(turn === "white" ? "black" : "white");
-        } else {
-          setStatus(
-            "Wrong selection. Choose valid source and destination again."
-          );
-          setSourceSelection(-1);
-        }
+        blackFallenSoldiers.push(square);
+        setBlackFallenSoldiers([...blackFallenSoldiers]);
       }
     }
+    return result;
   };
 
-  const isMoveLegal = (srcToDestPath: number[]): boolean => {
-    let isLegal = true;
-    for (let i = 0; i < srcToDestPath.length; i++) {
-      if (pieces[srcToDestPath[i]] !== null) {
-        isLegal = false;
-      }
+  const handleClick = (selectedSquare: Square) => {
+    if (gameOver) return;
+    // console.log(selectedSquare, player);
+    setStatus("");
+    if (!validateMove(srcSquare, selectedSquare, player, setStatus)) {
+      return;
     }
-    return isLegal;
+    if (srcSquare == null || selectedSquare.piece.player == player) {
+      srcSquare && srcSquare.clearBackGround();
+      selectedSquare.highlightBackGround();
+      setSrcSquare(selectedSquare);
+      setSquares([...squares]);
+      return;
+    }
+
+    const isValidMove = srcSquare.piece.validateMove(
+      srcSquare,
+      selectedSquare,
+      squares
+    );
+
+    if (!isValidMove) {
+      setStatus("Wrong Move. Please choose correct Move");
+      return;
+    }
+
+    squares[srcSquare.rowIdx][srcSquare.colIdx] = new Square(
+      srcSquare.rowIdx,
+      srcSquare.colIdx,
+      new DummyPiece()
+    );
+    squares[selectedSquare.rowIdx][selectedSquare.colIdx] = new Square(
+      selectedSquare.rowIdx,
+      selectedSquare.colIdx,
+      srcSquare.piece
+    );
+    squares[selectedSquare.rowIdx][selectedSquare.colIdx].clearBackGround();
+
+    const continueGame = setFallenSoldiers(selectedSquare);
+
+    if (!continueGame) {
+      return;
+    }
+
+    setSrcSquare(null);
+    setSquares([...squares]);
+    setPlayer(player == 1 ? 2 : 1);
+    setTurn(turn === "white" ? "black" : "white");
   };
 
   return (
-    <div>
+    <>
+      {gameOver && (
+        <div className="game-result">{`Player ${player} Won the Match`}</div>
+      )}
       <div className="game">
         <div className="game-board">
-          <Board pieces={pieces} onClick={(i) => handleClick(i)}></Board>
+          <Board
+            onClick={(square: Square) => handleClick(square)}
+            squares={squares}
+            size={size}
+          ></Board>
         </div>
         <div className="game-info">
           <h3>Turn</h3>
           <div id="player-turn-box" style={{ backgroundColor: turn }}></div>
-          <div className="game-status">{status}</div>
+          <div className="game-status danger">{status}</div>
           <div className="fallen-soldier-block">
             <FallenSoldiersBlock
               whiteFallenSoldiers={whiteFallenSoldiers}
@@ -105,7 +115,7 @@ const Game = () => {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
